@@ -53,6 +53,12 @@ def test_adder_runner():
     # equivalent to setting the PYTHONPATH environment variable
     sys.path.append(str(proj_path / "tests"))
 
+    runner_args = [
+        # "--ieee-asserts=disable",
+        "--vcd=waveforms.vcd",
+    ]
+    
+
     runner = get_runner("ghdl")
     # https://docs.cocotb.org/en/stable/library_reference.html#cocotb.runner.Simulator.build
     runner.build(
@@ -60,7 +66,11 @@ def test_adder_runner():
         hdl_toplevel="adder",
         always=True,
     )
-    runner.test(hdl_toplevel="adder", test_module="test_adder")
+    runner.test(
+        hdl_toplevel="adder", 
+        test_module="test_adder",
+        plusargs=runner_args,
+    )
 
 
 if __name__ == "__main__":
