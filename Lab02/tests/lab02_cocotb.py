@@ -3,17 +3,18 @@ import os
 import sys
 from pathlib import Path
 
-import cocotb
-from cocotb.runner import get_runner
-from cocotb.triggers import Timer
+import cocotb # type: ignore
+from cocotb.runner import get_runner # type: ignore
+from cocotb.triggers import Timer # type: ignore
 
 # Define your test here. See first lab or CodeSnippets.py 
 # for decorator and other special Python kewords
-def mytest():
+@cocotb.test()
+async def mytest(dut):
     # https://docs.cocotb.org/en/stable/triggers.html#cocotb.triggers.Timer
     # Do nothing for 100 ns
     # note there is a missing keyword before "Timer"
-    Timer(100, units='ns')
+    await Timer(100, units='ns')
     pass
     
 # Cocotb/GHDL runner. Use the first lab as template.
@@ -26,19 +27,33 @@ def simulation_runner():
     simulator_program = "ghdl"
     TopModule = "???"
 
+    proj_path = Path(__file__).resolve().parent.parent
+    # equivalent to setting the PYTHONPATH environment variable
+    sys.path.append(str(proj_path / "model"))
+    sys.path.append(str(proj_path / "tests"))
+
+    # Initial file list, empty
     vhdl_sources = []
+    # Append file to list
+    vhdl_sources += [proj_path / "hdl" / "sqrt_conv.vhd"]
+    runner_args = [
+        # "--ieee-asserts=disable",
+        "--vcd=waveforms.vcd",
+    ]
 
     runner = get_runner(simulator_program)
 	
     runner.build(
         vhdl_sources=vhdl_sources,
-        hdl_toplevel="???",
+        hdl_toplevel="square_root",
         always=True,
     )
 	
-    runner.test(hdl_toplevel="???", 
-				test_module="????", # name of this python file.
-				plusargs=[])
+    runner.test(
+        hdl_toplevel="square_root", 
+		test_module="lab02_cocotb", # name of this python file.
+		plusargs=runner_args,
+    )
 
 
 if __name__ == "__main__":
