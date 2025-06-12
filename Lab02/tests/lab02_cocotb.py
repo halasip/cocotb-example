@@ -6,15 +6,41 @@ from pathlib import Path
 import cocotb # type: ignore
 from cocotb.runner import get_runner # type: ignore
 from cocotb.triggers import Timer # type: ignore
+from cocotb.clock import Clock # type: ignore
 
 # Define your test here. See first lab or CodeSnippets.py 
 # for decorator and other special Python kewords
 @cocotb.test()
 async def mytest(dut):
-    # https://docs.cocotb.org/en/stable/triggers.html#cocotb.triggers.Timer
-    # Do nothing for 100 ns
-    # note there is a missing keyword before "Timer"
-    await Timer(100, units='ns')
+    # await Timer(100, units='ns')
+    c = Clock(dut.clk, 25, 'ns')
+    dut.reset.value = 1
+    await cocotb.start(c.start())
+    await cocotb.triggers.ClockCycles(dut.clk, 10, rising=True)
+
+    dut.reset.value = 0
+    await cocotb.triggers.ClockCycles(dut.clk, 2, rising=True)
+
+    dut.arg.value = 25
+    dut.arg_valid.value = 1
+    await cocotb.triggers.ClockCycles(dut.clk, 1, rising=True)
+    dut.arg_valid.value = 0
+
+    await cocotb.triggers.ClockCycles(dut.clk, 2, rising=True)
+
+
+    while dut.sqrt_valid.value != 1:
+        await cocotb.triggers.ClockCycles(dut.clk, 1, rising=True)
+
+    assert dut.sqrt_res.value == 5
+
+    dut.reset.value = 1
+    await cocotb.triggers.ClockCycles(dut.clk, 10, rising=True)
+
+    dut.reset.value = 0
+    await cocotb.triggers.ClockCycles(dut.clk, 2, rising=True)
+
+
     pass
     
 # Cocotb/GHDL runner. Use the first lab as template.

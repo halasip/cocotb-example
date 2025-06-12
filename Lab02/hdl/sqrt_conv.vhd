@@ -12,13 +12,12 @@ use ieee.numeric_std.all;
 entity square_root is
     generic(WIDTH : integer := 32);
     port (
-        Clk : in std_logic;     --Clock
-        reset : in std_logic;     --Asynchronous active high reset.
-        arg : in unsigned(WIDTH-1 downto 0);  --this is the number for which we want to find square root.
-		
-		arg_valid       : in std_logic;
-        sqrt_valid : out std_logic;   --This signal goes high when output is ready
-        sqrt_res : out unsigned(WIDTH/2-1 downto 0)  --square root of 'arg'
+        clk        : in     std_logic;                      --Clock
+        reset      : in     std_logic;                      --Asynchronous active high reset.
+        arg        : in     unsigned(WIDTH-1 downto 0);     --this is the number for which we want to find square root.
+		arg_valid  : in     std_logic;
+        sqrt_valid : out    std_logic;                      --This signal goes high when output is ready
+        sqrt_res   : out    unsigned(WIDTH/2-1 downto 0)    --square root of 'arg'
     );
 end square_root;
 
@@ -30,7 +29,7 @@ signal index : integer := 0;
 
 begin
 
-    SQROOT_PROC : process(Clk,reset)
+    SQROOT_PROC : process(clk,reset)
         variable a : unsigned(N-1 downto 0);  --original arg.
         variable left,right,r : unsigned(N/2+1 downto 0):=(others => '0');  --arg to adder/sub.r-remainder.
         variable q : unsigned(N/2-1 downto 0) := (others => '0');  --result.
@@ -48,7 +47,7 @@ begin
             r := (others => '0');
             q := (others => '0');
 			calculating := false;
-        elsif(rising_edge(Clk)) then
+        elsif(rising_edge(clk)) then
 			index <= i;
             --Before we start the first clock cycle get the 'arg' to the variable 'a'.
             if(arg_valid = '1' and calculating = false) then  

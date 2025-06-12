@@ -5,12 +5,12 @@ import sys
 import random
 from pathlib import Path
 
-import cocotb
-from cocotb.runner import get_runner
-from cocotb.triggers import Timer
+import cocotb # type: ignore
+from cocotb.runner import get_runner # type: ignore
+from cocotb.triggers import Timer # type: ignore
 
 if cocotb.simulator.is_running():
-    from adder_model import adder_model
+    from adder_model import adder_model # type: ignore
 
 
 
