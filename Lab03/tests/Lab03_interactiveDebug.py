@@ -7,11 +7,16 @@ import cocotb
 from cocotb.runner import get_runner
 from cocotb.triggers import Timer
 from cocotb.clock import Clock
+import debugpy
 
 # cocotb decorator indicating a test to run with simulator.
 # multiple tests may be included in the same python module (file)
 @cocotb.test()
 async def sqrt_test(dut):
+
+    debugpy.listen(5678)
+    debugpy.wait_for_client()
+    debugpy.breakpoint()
 
     test_value = 4
     expected_result = 2

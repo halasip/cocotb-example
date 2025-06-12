@@ -13,6 +13,10 @@ from cocotb.clock import Clock # type: ignore
 @cocotb.test()
 async def mytest(dut):
     # await Timer(100, units='ns')
+
+    expected_value = 5
+    test_value = expected_value**2
+
     c = Clock(dut.clk, 25, 'ns')
     dut.reset.value = 1
     await cocotb.start(c.start())
@@ -21,7 +25,7 @@ async def mytest(dut):
     dut.reset.value = 0
     await cocotb.triggers.ClockCycles(dut.clk, 2, rising=True)
 
-    dut.arg.value = 25
+    dut.arg.value = test_value
     dut.arg_valid.value = 1
     await cocotb.triggers.ClockCycles(dut.clk, 1, rising=True)
     dut.arg_valid.value = 0
@@ -32,7 +36,7 @@ async def mytest(dut):
     while dut.sqrt_valid.value != 1:
         await cocotb.triggers.ClockCycles(dut.clk, 1, rising=True)
 
-    assert dut.sqrt_res.value == 5
+    assert dut.sqrt_res.value == expected_value, f"Expected {expected_value}, got {dut.sqrt_res.value}"
 
     dut.reset.value = 1
     await cocotb.triggers.ClockCycles(dut.clk, 10, rising=True)
