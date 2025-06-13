@@ -15,7 +15,7 @@ from cocotb.clock import Clock
 from cocotbext.uart import UartSource, UartSink
 from cocotb.log import SimLog
 
-from Lab06_MMC_Sqrt_solution import MMC_sqrt
+from Lab06_MMC_Sqrt import MMC_sqrt
 
 # Example class. Copy-paste section from the previous labs in the methods
 # Add the "self." keyword where appropriate (i.e. : self.dut.Signal).
@@ -39,8 +39,11 @@ class BaseEnvironment:
         # self.UARTUnit = UartSource(...) 
         self.uart_driver = UartSource(self.dut.rx_uart_serial_in, baud=1000000, bits=8)
         self.uart_sink   = UartSink(self.dut.tx_uart_serial_out, baud=1000000, bits=8)
+        self.uart_driver.log.setLevel(logging.DEBUG)
+        self.inst_MMC_sqrt = MMC_sqrt(self.dut.inst_square_root)
         
     def StartEnvironment(self):
+        self.inst_MMC_sqrt.start()
         pass
     
     # Initialize dut signals, clock and run the reset sequence
@@ -69,6 +72,7 @@ class BaseEnvironment:
     async def postTest(self):
         await cocotb.triggers.ClockCycles(self.dut.clk, 10, rising=True)
         self.dut.reset.value = 1
+        self.inst_MMC_sqrt.stop()
         await cocotb.triggers.ClockCycles(self.dut.clk, 2, rising=True)
         
     # Wrapper around driver, to send values to the dut.

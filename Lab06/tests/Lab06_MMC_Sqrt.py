@@ -115,16 +115,14 @@ class MMC_sqrt:
 
         self.input_mon = DataValidMonitor(
             clk=self.inst_Sqrt.clk,
-# change the "fill with" parts below
-            valid=self.inst_Sqrt.fill_with_valid_signal,
-            datas=dict(Argument=self.inst_Sqrt.fill_with_arg_signal),
+            valid=self.inst_Sqrt.arg_valid,
+            datas=dict(Argument=self.inst_Sqrt.arg),
         )
 
         self.output_mon = DataValidMonitor(
-            clk=self.inst_Sqrt.clk, 
-# change the "fill with" parts below
-            valid=self.inst_Sqrt.fill_with_valid_signal, 
-            datas=dict(SqrtResult=self.inst_Sqrt.fill_with_res_signal)
+            clk=self.inst_Sqrt.clk,
+            valid=self.inst_Sqrt.sqrt_valid, 
+            datas=dict(SqrtResult=self.inst_Sqrt.sqrt_res)
         )
 
         self._checker = None
@@ -152,6 +150,8 @@ class MMC_sqrt:
         # choice (math module, numpy, etc)
         # Make sure the final value is an integer
         Expected = 0
+        Expected = math.sqrt(model_input_value)
+        Expected = math.floor(Expected)
         
         self.log.info("Model predicts: " + str(Expected))
         return Expected

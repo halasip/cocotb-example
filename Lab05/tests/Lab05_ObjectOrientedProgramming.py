@@ -38,10 +38,11 @@ class BaseEnvironment:
     
     # Initialize dut signals, clock and run the reset sequence
     async def InitSignalsClockAndReset(self):
+        self.dut.rx_uart_serial_in.value = 1
+        self.dut.reset.value = 1
         c = Clock(self.dut.clk, 100, 'ns')
         await cocotb.start(c.start())
 
-        self.dut.reset.value = 1
         await cocotb.triggers.ClockCycles(self.dut.clk, 5, rising=True)
         self.dut.reset.value = 0
         await cocotb.triggers.ClockCycles(self.dut.clk, 2, rising=True)
