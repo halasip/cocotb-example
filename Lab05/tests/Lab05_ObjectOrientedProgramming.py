@@ -31,10 +31,20 @@ class BaseEnvironment:
     def BuildEnvironment(self):
         # put the UART driver and sink declarations here as objects
         # self.UARTUnit = UartSource(...) 
+        self.uart_driver = UartSource(self.dut.rx_uart_serial_in, baud=1000000, bits=8)
+        self.uart_sink   = UartSink(self.dut.tx_uart_serial_out, baud=1000000, bits=8)
+        # self.uart_driver.log.setLevel(logging.DEBUG)
         pass
     
     # Initialize dut signals, clock and run the reset sequence
     async def InitSignalsClockAndReset(self):
+        c = Clock(self.dut.clk, 100, 'ns')
+        await cocotb.start(c.start())
+
+        self.dut.reset.value = 1
+        await cocotb.triggers.ClockCycles(self.dut.clk, 5, rising=True)
+        self.dut.reset.value = 0
+        await cocotb.triggers.ClockCycles(self.dut.clk, 2, rising=True)
         pass
         
     # Virtual function, forces to use derived class.
@@ -45,48 +55,66 @@ class BaseEnvironment:
     # Put anything happening at the end of the simulation here.
     # for the lab, a delay followed by rising the reset.
     async def postTest(self):
+        await cocotb.triggers.ClockCycles(self.dut.clk, 5, rising=True)
+        self.dut.reset.value = 1
+        await cocotb.triggers.ClockCycles(self.dut.clk, 2, rising=True)
         pass
         
     # Wrapper around driver, to send values to the dut.
     async def SendValue(self, ValueToDut):
+        test_value = ValueToDut
+        await self.uart_driver.write(test_value.to_bytes(1, "little")) 
+        ##### read command
+        await self.uart_driver.wait()
         pass
     
     # Read back the value and convert to integer.
     async def ReadResult(self):
-        # result_BytesArray = await self.???.read(count=1)
-        result_BytesArray = 0 ## to replace
+        result_BytesArray = await self.uart_sink.read(count=1)
         result_bytes = bytes(result_BytesArray)
         result_int = int.from_bytes(result_bytes, "little")
         return result_int
 
 
 # Define a test-specific sequence.
-class EmptyTestClass(BaseEnvironment):
+class DirectedTest(BaseEnvironment):
     async def test(self):
-        # intentionally empty. Test does nothing.
-        Timer(100, units='ns')
+        TestValues = [1, 2, 3, 4]
+        ExpectedValues = [5, 6, 7, 8]
+        for Test, Expected in zip(TestValues, ExpectedValues):
+            self.log.info("Tested value: %d, Expected result: %d", Test, Expected)
+            await self.SendValue(Expected**2)
+            result = await self.ReadResult()
+            assert result == Expected, f"Expected {Expected}, got {result}"
         pass
         
 
 # Define another test-specific sequence.
-class OtherEmptyTestClass(BaseEnvironment):
+class RandValuesTestClass(BaseEnvironment):
     async def test(self):
-        # intentionally empty. Test does nothing.
-        Timer(400, units='ns')
+        # Generate 5 random values, send them to the DUT and check the result.
+        for x in range(0, 5):
+            RandomValue = random.randint(0, 255)
+            Expected = math.sqrt(RandomValue)
+            Expected = math.floor(Expected)
+
+            await self.SendValue(RandomValue)
+            DutResponse = await self.ReadResult()
+            assert DutResponse == Expected, f"Expected {Expected}, got {DutResponse}"
         pass
 
 # Function(s) that will be called by the simulator.
 @cocotb.test()
 async def EmptyTest(dut):
-    print("Starting empty test")
-    runObject = EmptyTestClass(dut)
+    runObject = DirectedTest(dut)
+    runObject.log.info("Starting empty test")
     await runObject.run()
     
 
 @cocotb.test()
 async def OtherEmptyTest(dut):
-    print("Starting other empty test")
-    runObject = OtherEmptyTestClass(dut)
+    runObject = RandValuesTestClass(dut)
+    runObject.log.info("Starting other empty test")
     await runObject.run()
     
     
