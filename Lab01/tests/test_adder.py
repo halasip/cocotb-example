@@ -49,20 +49,21 @@ def test_adder_runner():
     vhdl_sources = []
     # Append file to list
     vhdl_sources += [proj_path / "hdl" / "adder.vhdl"]
+    verilog_sources += [proj_path / "hdl" / "adder.sv"]
 
     # equivalent to setting the PYTHONPATH environment variable
     sys.path.append(str(proj_path / "tests"))
 
     runner_args = [
         # "--ieee-asserts=disable",
-        "--vcd=waveforms.vcd",
+        # "--vcd=waveforms.vcd",
+        "-voptargs=+acc",
     ]
-    
 
-    runner = get_runner("ghdl")
+    runner = get_runner("questa")
     # https://docs.cocotb.org/en/stable/library_reference.html#cocotb.runner.Simulator.build
     runner.build(
-        vhdl_sources=vhdl_sources,
+        verilog_sources=verilog_sources,
         hdl_toplevel="adder",
         always=True,
     )
